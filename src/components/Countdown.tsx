@@ -1,13 +1,18 @@
 import { useState, useEffect } from 'react';
 import style from '../styles/components/Countdown.module.css';
 
+let countdownTimeout: NodeJS.Timeout;
+
 export function Countdown() {
 
   // hook de count down
-  const [time, setTime] = useState(26 * 60);
+  const [time, setTime] = useState(0.1 * 60);
 
   // criando um estado
-  const [active, setActive] = useState(false);
+  const [isActive, setIsActive] = useState(false);
+
+  // quando finalizar o countdown
+  const [hasFineshed, setHasFineshed] = useState(false);
 
   // arrendo os minutos para baixo
   const minutes = Math.floor(time / 60);
@@ -21,22 +26,32 @@ export function Countdown() {
   const [secundLeft, secundRight] = String(secunds).padStart(2, '0').split('');
 
   function startCountDown() {
-    setActive(true);
+    setIsActive(true);
+  }
 
-
-
+  function resetCountDown() {
+    clearTimeout(countdownTimeout); // cancela o setTimeout para não diminuir um segundo quando é parado o timeout
+    setIsActive(false);
+    // volta o setTime para o valor inicial
+    setTime(0.1 * 60)
   }
 
   // setando o use effect, inicia com uma function (no caso usei uma arrow function), depois o quando ele deve disparar a função, no caso toda vez que active mudar
+  // useEffect = a um gerador de efeitos colaterais
   useEffect(() => {
-    if(active && time > 0) {
-      setTimeout(() => {
+    if(isActive && time > 0) {
+      countdownTimeout = setTimeout(() => {
         setTime(time -1);
       }, 1000);
+    } else if(isActive && time === 0) {
+      console.log('finalizou o count down');
+      setHasFineshed(true);
+      setIsActive(false);
     }
-    console.log(active);
-  }, [active, time])
+    console.log(isActive);
+  }, [isActive, time])
 
+  // no return temos um if ternário em mais de uma linha
 
   return(
       <div>
@@ -55,13 +70,38 @@ export function Countdown() {
 
         </div>
 
-        <button
-          type="button"
-          className={style.countdownButton}
-          onClick={startCountDown}
-        >
-          Iniciar um ciclo
-        </button>
+        { hasFineshed ? (
+          <button
+            disabled
+            className={style.countdownButton}
+          >
+            Ciclo encerrado
+          </button>
+        ) :(
+          <>
+            { isActive ? (
+              <button
+                type="button"
+                className={`${style.countdownButton} ${style.countdownButtonActive}`}
+                onClick={resetCountDown}
+              >
+                Abandonar ciclo
+              </button>
+              ) : (
+              <button
+                type="button"
+                className={style.countdownButton}
+                onClick={startCountDown}
+              >
+                Iniciar um ciclo
+              </button>
+            )}
+          </>
+        ) }
+
+
+
+
 
       </div>
   );
